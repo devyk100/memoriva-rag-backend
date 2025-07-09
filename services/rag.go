@@ -21,17 +21,16 @@ func NewRAGService(dbService *DatabaseService, llmService *LLMService, embedding
 }
 
 func (s *RAGService) ProcessStudySession(sessionID string) error {
-	// Update status to PROCESSING
-	err := s.dbService.UpdateStudySessionStatus(sessionID, "PROCESSING")
-	if err != nil {
-		return fmt.Errorf("failed to update session status: %w", err)
-	}
-
-	// Get study session details
+	// Get study session details first to validate it exists
 	session, err := s.dbService.GetStudySession(sessionID)
 	if err != nil {
-		s.dbService.UpdateStudySessionStatus(sessionID, "FAILED")
 		return fmt.Errorf("failed to get session: %w", err)
+	}
+
+	// Update status to PROCESSING
+	err = s.dbService.UpdateStudySessionStatus(sessionID, "PROCESSING")
+	if err != nil {
+		return fmt.Errorf("failed to update session status: %w", err)
 	}
 
 	// Get deck cards with metadata

@@ -27,6 +27,15 @@ func (h *StudyHandler) ProcessStudySession(c *gin.Context) {
 		return
 	}
 
+	// Validate that the study session exists before enqueuing
+	_, err := h.dbService.GetStudySession(req.SessionID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Study session not found",
+		})
+		return
+	}
+
 	// Enqueue the study session for processing
 	if err := h.queueService.EnqueueStudySession(req.SessionID); err != nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{

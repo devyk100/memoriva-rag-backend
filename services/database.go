@@ -22,6 +22,19 @@ func InitDatabase(databaseURL string) (*gorm.DB, error) {
 		return nil, err
 	}
 
+	// Auto-migrate the schema
+	err = db.AutoMigrate(
+		&models.User{},
+		&models.FlashcardDeck{},
+		&models.Flashcard{},
+		&models.SRSCardMetadata{},
+		&models.StudySession{},
+		&models.StudySessionCard{},
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	return db, nil
 }
 
