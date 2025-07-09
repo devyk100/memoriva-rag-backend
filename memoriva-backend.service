@@ -1,0 +1,34 @@
+[Unit]
+Description=Memoriva RAG Backend Service
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=memoriva
+Group=memoriva
+WorkingDirectory=/opt/memoriva-backend
+ExecStart=/opt/memoriva-backend/memoriva-backend
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=memoriva-backend
+
+# Environment file
+EnvironmentFile=/opt/memoriva-backend/.env
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/memoriva-backend/uploads
+ReadWritePaths=/opt/memoriva-backend/logs
+
+# Resource limits
+LimitNOFILE=65536
+MemoryMax=512M
+
+[Install]
+WantedBy=multi-user.target

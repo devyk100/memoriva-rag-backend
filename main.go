@@ -32,18 +32,29 @@ func main() {
 	embeddingService := services.NewEmbeddingService(cfg.OpenAIAPIKey)
 	ragService := services.NewRAGService(dbService, llmService, embeddingService)
 
+	// Initialize S3 service
+	s3Service, err := services.NewS3Service(cfg)
+	if err != nil {
+		log.Fatal("Failed to initialize S3 service:", err)
+	}
+
 	// Initialize queue service with 3 workers for concurrent processing
 	queueService := services.NewQueueService(3, ragService, dbService)
 	queueService.Start()
 
 	// Initialize handlers with queue service and database service
 	studyHandler := handlers.NewStudyHandler(queueService, dbService)
+	uploadHandler := handlers.NewUploadHandler(s3Service)
+	localUploadHandler := handlers.NewLocalUploadHandler()
 
 	// Setup Gin router
 	r := gin.Default()
 
 	// Add CORS middleware
 	r.Use(middleware.CORSMiddleware())
+
+	// Serve static files from uploads directory
+	r.Static("/uploads", "./uploads")
 
 	// Health check endpoint (no auth required)
 	r.GET("/health", func(c *gin.Context) {
@@ -61,6 +72,12 @@ func main() {
 		{
 			studySessions.POST("/process", studyHandler.ProcessStudySession)
 			studySessions.GET("/:id/status", studyHandler.GetStudySessionStatus)
+		}
+
+		upload := api.Group("/upload")
+		{
+			upload.POST("/presigned-url", uploadHandler.GeneratePresignedURL)
+			upload.POST("/local", localUploadHandler.UploadImage) // Local upload endpoint
 		}
 	}
 
