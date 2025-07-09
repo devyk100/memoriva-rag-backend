@@ -49,7 +49,7 @@ type StudySession struct {
 	DeckID      string             `gorm:"column:deckId"`
 	Prompt      string             `gorm:"column:prompt"`
 	MaxCards    int                `gorm:"column:maxCards"`
-	Status      string             `gorm:"column:status;default:PENDING"`
+	Status      string             `gorm:"column:status;type:varchar(20);default:'PENDING'"`
 	CreatedAt   time.Time          `gorm:"column:createdAt;default:CURRENT_TIMESTAMP"`
 	CompletedAt *time.Time         `gorm:"column:completedAt"`
 	User        User               `gorm:"foreignKey:UserID"`

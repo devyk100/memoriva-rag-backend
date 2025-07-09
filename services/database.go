@@ -17,20 +17,9 @@ type DatabaseService struct {
 }
 
 func InitDatabase(databaseURL string) (*gorm.DB, error) {
-	db, err := gorm.Open(postgres.Open(databaseURL), &gorm.Config{})
-	if err != nil {
-		return nil, err
-	}
-
-	// Auto-migrate the schema
-	err = db.AutoMigrate(
-		&models.User{},
-		&models.FlashcardDeck{},
-		&models.Flashcard{},
-		&models.SRSCardMetadata{},
-		&models.StudySession{},
-		&models.StudySessionCard{},
-	)
+	db, err := gorm.Open(postgres.Open(databaseURL), &gorm.Config{
+		PrepareStmt: false, // Disable prepared statements to avoid cached plan issues
+	})
 	if err != nil {
 		return nil, err
 	}
