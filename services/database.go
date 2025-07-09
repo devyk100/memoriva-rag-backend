@@ -18,11 +18,16 @@ type DatabaseService struct {
 
 func InitDatabase(databaseURL string) (*gorm.DB, error) {
 	db, err := gorm.Open(postgres.Open(databaseURL), &gorm.Config{
-		PrepareStmt: false, // Disable prepared statements to avoid cached plan issues
+		PrepareStmt:                              false, // Disable prepared statements
+		DisableForeignKeyConstraintWhenMigrating: true,  // Disable FK constraints
+		SkipDefaultTransaction:                   true,  // Skip default transactions
 	})
 	if err != nil {
 		return nil, err
 	}
+
+	// Execute DISCARD ALL to clear any cached plans
+	db.Exec("DISCARD ALL")
 
 	return db, nil
 }
@@ -33,7 +38,7 @@ func NewDatabaseService(db *gorm.DB) *DatabaseService {
 
 func (s *DatabaseService) GetStudySession(sessionID string) (*models.StudySession, error) {
 	var session models.StudySession
-	err := s.db.Preload("User").Preload("Deck").First(&session, "id = ?", sessionID).Error
+	err := s.db.First(&session, "id = ?", sessionID).Error
 	if err != nil {
 		return nil, err
 	}
