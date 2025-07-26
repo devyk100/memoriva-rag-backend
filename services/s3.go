@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"io"
 	"time"
 
 	memoriva_config "memoriva-backend/config"
@@ -96,4 +97,43 @@ func (s *S3Service) GeneratePresignedUploadURL(contentType string) (*PresignedUp
 		Key:         key,
 		ContentType: contentType,
 	}, nil
+}
+
+func (s *S3Service) UploadFile(file io.Reader, contentType string) (string, error) {
+	// Generate unique key for the image
+	imageID := uuid.New().String()
+	var extension string
+
+	// Determine file extension based on content type
+	switch contentType {
+	case "image/jpeg":
+		extension = ".jpg"
+	case "image/png":
+		extension = ".png"
+	case "image/gif":
+		extension = ".gif"
+	case "image/webp":
+		extension = ".webp"
+	default:
+		extension = ".jpg" // Default to jpg
+	}
+
+	key := fmt.Sprintf("images/%s%s", imageID, extension)
+
+	// Upload file directly to S3
+	_, err := s.client.PutObject(context.TODO(), &s3.PutObjectInput{
+		Bucket:      aws.String(s.bucketName),
+		Key:         aws.String(key),
+		Body:        file,
+		ContentType: aws.String(contentType),
+	})
+
+	if err != nil {
+		return "", fmt.Errorf("failed to upload file to S3: %w", err)
+	}
+
+	// Generate the CloudFront URL for accessing the image
+	imageURL := fmt.Sprintf("%s/%s", s.cloudFrontBaseURL, key)
+
+	return imageURL, nil
 }

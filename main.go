@@ -77,6 +77,7 @@ func main() {
 		upload := api.Group("/upload")
 		{
 			upload.POST("/presigned-url", uploadHandler.GeneratePresignedURL)
+			upload.POST("/s3", uploadHandler.UploadToS3)          // Direct S3 upload endpoint
 			upload.POST("/local", localUploadHandler.UploadImage) // Local upload endpoint
 		}
 	}
